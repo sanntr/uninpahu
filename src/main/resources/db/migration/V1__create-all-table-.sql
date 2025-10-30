@@ -1,55 +1,108 @@
-
--- Tabla EMPRENDEDOR
-CREATE TABLE emprendedor (
+-- =======================
+-- TABLA: rol
+-- =======================
+CREATE TABLE rol (
     id SERIAL PRIMARY KEY,
-    nombre_completo VARCHAR(150) NOT NULL,
-    correo_electronico VARCHAR(150) NOT NULL,
-    codigo_area VARCHAR(5) DEFAULT '57',
-    numero_telefono VARCHAR(20) NOT NULL,
-    ciudad VARCHAR(100),
-    pais VARCHAR(100) DEFAULT 'Colombia',
-    fecha_registro TIMESTAMP DEFAULT NOW()
+    nombre VARCHAR(100) NOT NULL UNIQUE
 );
 
--- Tabla NEGOCIO
+-- =======================
+-- TABLA: usuario
+-- =======================
+CREATE TABLE usuario (
+    id SERIAL PRIMARY KEY,
+    nombre_usuario VARCHAR(100) NOT NULL UNIQUE,
+    nombre VARCHAR(100) NOT NULL,
+    apellido VARCHAR(100) NOT NULL,
+    contrasena VARCHAR(255) NOT NULL,
+    correo VARCHAR(150) NOT NULL UNIQUE,
+    telefono VARCHAR(20) NOT NULL UNIQUE,
+    activo BOOLEAN DEFAULT TRUE
+);
+
+-- =======================
+-- TABLA: rol_usuario
+-- =======================
+CREATE TABLE rol_usuario (
+    id SERIAL PRIMARY KEY,
+    id_usuario INT NOT NULL,
+    id_rol INT NOT NULL,
+    FOREIGN KEY (id_usuario) REFERENCES usuario(id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (id_rol) REFERENCES rol(id)
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- =======================
+-- TABLA: negocio
+-- =======================
 CREATE TABLE negocio (
     id SERIAL PRIMARY KEY,
-    id_emprendedor INT NOT NULL,
-    nombre_negocio VARCHAR(150) NOT NULL,
-    categoria_producto_servicio VARCHAR(100) NOT NULL,
-    descripcion_negocio TEXT,
-    nombre_producto_principal VARCHAR(150),
-    caracteristicas_principales TEXT,
-    palabras_clave TEXT NOT NULL,
-    enlace_redes_o_web VARCHAR(255),
-    FOREIGN KEY (id_emprendedor) REFERENCES emprendedor(id) ON DELETE CASCADE
+    nombre VARCHAR(150) NOT NULL UNIQUE,
+    id_usuario INT,
+    calificacion DECIMAL(3,2),
+    descripcion TEXT,
+    FOREIGN KEY (id_usuario) REFERENCES usuario(id)
+        ON DELETE SET NULL ON UPDATE CASCADE
 );
 
--- Tabla ESTADO_NEGOCIO
-CREATE TABLE estado_negocio (
+-- =======================
+-- TABLA: categoria
+-- =======================
+CREATE TABLE categoria (
     id SERIAL PRIMARY KEY,
-    id_negocio INT NOT NULL,
-    frecuencia_compra_cliente VARCHAR(100),
-    gasto_promedio_cliente NUMERIC(12,2),
-    metodo_fijacion_precios VARCHAR(100),
-    precio_estimado NUMERIC(12,2),
-    publico_objetivo TEXT,
-    FOREIGN KEY (id_negocio) REFERENCES negocio(id) ON DELETE CASCADE
+    descuento DECIMAL(5,2),
+    tipo VARCHAR(100) NOT NULL UNIQUE
 );
 
--- Tabla EVALUACION_VALOR
-CREATE TABLE evaluacion_valor (
+-- =======================
+-- TABLA: producto
+-- =======================
+CREATE TABLE producto (
     id SERIAL PRIMARY KEY,
+    nombre VARCHAR(150) NOT NULL,
+    descripcion TEXT NOT NULL,
+    id_negocio INT,
+    descuento DECIMAL(5,2),
+    precio DECIMAL(10,2) NOT NULL,
+    stock INT NOT NULL,
+    calificacion DECIMAL(3,2),
+    activo BOOLEAN DEFAULT TRUE,
+    FOREIGN KEY (id_negocio) REFERENCES negocio(id)
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- =======================
+-- TABLA: categoria_producto
+-- =======================
+CREATE TABLE categoria_producto (
+    id SERIAL PRIMARY KEY,
+    id_categoria INT NOT NULL,
+    id_producto INT NOT NULL,
+    FOREIGN KEY (id_categoria) REFERENCES categoria(id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (id_producto) REFERENCES producto(id)
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- =======================
+-- TABLA: compra
+-- =======================
+CREATE TABLE compra (
+    id SERIAL PRIMARY KEY,
+    id_usuario INT NOT NULL,
     id_negocio INT NOT NULL,
-    nivel_experiencia_emprendedor INT CHECK (nivel_experiencia_emprendedor BETWEEN 1 AND 5),
-    expectativas_al_unirse INT CHECK (expectativas_al_unirse BETWEEN 1 AND 5),
-    proyeccion_ventas INT CHECK (proyeccion_ventas BETWEEN 1 AND 5),
-    interes_colaboracion INT CHECK (interes_colaboracion BETWEEN 1 AND 5),
-    logro_en_30_dias BOOLEAN DEFAULT FALSE,
-    logro_en_6_meses BOOLEAN DEFAULT FALSE,
-    logro_en_12_meses BOOLEAN DEFAULT FALSE,
-    comparacion_precios TEXT,
-    rango_ventas_mensuales VARCHAR(100),
-    crecimiento_2024_2025 NUMERIC(5,2),
-    FOREIGN KEY (id_negocio) REFERENCES negocio(id) ON DELETE CASCADE
+    id_producto INT NOT NULL,
+    valor_unidad INT NOT NULL,
+    cantidad INT,
+    valor_pagado DECIMAL(10,2) NOT NULL,
+    descuento_aplicado DECIMAL(5,2),
+    fecha_hora_compra TIMESTAMP NOT NULL,
+    estado_compra VARCHAR(50),
+    FOREIGN KEY (id_usuario) REFERENCES usuario(id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (id_negocio) REFERENCES negocio(id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (id_producto) REFERENCES producto(id)
+        ON DELETE CASCADE ON UPDATE CASCADE
 );
