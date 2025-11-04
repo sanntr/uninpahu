@@ -11,7 +11,11 @@ import com.uninpahu.uninpahu.domain.negocio.model.Negocio;
 import com.uninpahu.uninpahu.domain.negocio.repository.NegocioRepository;
 import com.uninpahu.uninpahu.domain.producto.model.Producto;
 import com.uninpahu.uninpahu.domain.producto.repository.ProductoRepository;
+import com.uninpahu.uninpahu.domain.usuario.model.Usuario;
+import com.uninpahu.uninpahu.infraestructure.exception.ValidacionException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,7 +39,14 @@ public class ProductoService {
     public ProductoResponseDTO crearProducto(CrearProductoDTO dto) {
         // Verificar que el negocio existe
         Negocio negocio = negocioRepository.findById(dto.idNegocio())
-                .orElseThrow(() -> new RuntimeException("Negocio no encontrado"));
+                .orElseThrow(() -> new ValidacionException("Negocio no encontrado con ID: " + dto.idNegocio()));
+
+        // Verificar que el usuario autenticado es el dueño del negocio
+        Usuario usuarioActual = obtenerUsuarioAutenticado();
+
+        if (!negocio.getIdUsuario().equals(usuarioActual.getId()) && !esAdmin(usuarioActual)) {
+            throw new ValidacionException("No tienes permiso para crear productos en este negocio. Solo el propietario del negocio o un administrador pueden hacerlo");
+        }
 
         Producto producto = new Producto(
                 dto.nombre(),
@@ -44,8 +55,8 @@ public class ProductoService {
                 dto.descuento(),
                 dto.precio(),
                 dto.stock(),
-                null, // calificación inicial es null
-                true  // activo por defecto
+                null,
+                true
         );
 
         producto = productoRepository.save(producto);
@@ -63,7 +74,7 @@ public class ProductoService {
     @Transactional(readOnly = true)
     public ProductoResponseDTO obtenerProductoPorId(Long id) {
         Producto producto = productoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+                .orElseThrow(() -> new ValidacionException("Producto no encontrado con ID: " + id));
         return mapearAResponseDTO(producto);
     }
 
@@ -127,7 +138,10 @@ public class ProductoService {
     @Transactional
     public ProductoResponseDTO actualizarProducto(Long id, ActualizarProductoDTO dto) {
         Producto producto = productoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+                .orElseThrow(() -> new ValidacionException("Producto no encontrado con ID: " + id));
+
+        // Verificar permisos: el usuario debe ser dueño del negocio o admin
+        verificarPermisosProducto(producto);
 
         producto.actualizarDatos(dto.nombre(), dto.descripcion(), dto.precio(), dto.stock());
 
@@ -149,7 +163,10 @@ public class ProductoService {
     @Transactional
     public ProductoResponseDTO actualizarStock(Long id, ActualizarStockDTO dto) {
         Producto producto = productoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+                .orElseThrow(() -> new ValidacionException("Producto no encontrado con ID: " + id));
+
+        // Verificar permisos
+        verificarPermisosProducto(producto);
 
         producto.actualizarStock(dto.stock());
         producto = productoRepository.save(producto);
@@ -160,7 +177,10 @@ public class ProductoService {
     @Transactional
     public void activarProducto(Long id) {
         Producto producto = productoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+                .orElseThrow(() -> new ValidacionException("Producto no encontrado con ID: " + id));
+
+        // Verificar permisos
+        verificarPermisosProducto(producto);
 
         producto.activar();
         productoRepository.save(producto);
@@ -169,7 +189,10 @@ public class ProductoService {
     @Transactional
     public void desactivarProducto(Long id) {
         Producto producto = productoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+                .orElseThrow(() -> new ValidacionException("Producto no encontrado con ID: " + id));
+
+        // Verificar permisos
+        verificarPermisosProducto(producto);
 
         producto.desactivar();
         productoRepository.save(producto);
@@ -177,10 +200,38 @@ public class ProductoService {
 
     @Transactional
     public void eliminarProducto(Long id) {
-        if (!productoRepository.existsById(id)) {
-            throw new RuntimeException("Producto no encontrado");
-        }
+        Producto producto = productoRepository.findById(id)
+                .orElseThrow(() -> new ValidacionException("Producto no encontrado con ID: " + id));
+
+        // Verificar permisos
+        verificarPermisosProducto(producto);
+
         productoRepository.deleteById(id);
+    }
+
+    // Métodos auxiliares de seguridad
+    private void verificarPermisosProducto(Producto producto) {
+        Usuario usuarioActual = obtenerUsuarioAutenticado();
+
+        Negocio negocio = negocioRepository.findById(producto.getIdNegocio())
+                .orElseThrow(() -> new ValidacionException("Negocio no encontrado"));
+
+        if (!negocio.getIdUsuario().equals(usuarioActual.getId()) && !esAdmin(usuarioActual)) {
+            throw new ValidacionException("No tienes permiso para modificar este producto. Solo el propietario del negocio o un administrador pueden hacerlo");
+        }
+    }
+
+    private Usuario obtenerUsuarioAutenticado() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() ||
+                authentication.getPrincipal().equals("anonymousUser")) {
+            throw new ValidacionException("Debes iniciar sesión para realizar esta acción");
+        }
+        return (Usuario) authentication.getPrincipal();
+    }
+
+    private boolean esAdmin(Usuario usuario) {
+        return usuario.tieneRol("ADMIN");
     }
 
     // Métodos auxiliares de mapeo

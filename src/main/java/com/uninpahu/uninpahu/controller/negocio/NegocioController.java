@@ -5,6 +5,7 @@ import com.uninpahu.uninpahu.application.negocio.dto.CrearNegocioDTO;
 import com.uninpahu.uninpahu.application.negocio.dto.NegocioListaDTO;
 import com.uninpahu.uninpahu.application.negocio.dto.NegocioResponseDTO;
 import com.uninpahu.uninpahu.application.negocio.service.NegocioService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -14,13 +15,14 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/negocios")
+@RequestMapping("/negocios")
 @CrossOrigin(origins = "*")
 public class NegocioController {
 
     @Autowired
     private NegocioService negocioService;
 
+    @SecurityRequirement(name = "bearer-key")
     @PostMapping
     public ResponseEntity<NegocioResponseDTO> crearNegocio(@Valid @RequestBody CrearNegocioDTO dto) {
         NegocioResponseDTO negocio = negocioService.crearNegocio(dto);
@@ -56,7 +58,7 @@ public class NegocioController {
         List<NegocioListaDTO> negocios = negocioService.obtenerMejoresNegocios();
         return ResponseEntity.ok(negocios);
     }
-
+    @SecurityRequirement(name = "bearer-key")
     @PutMapping("/{id}")
     public ResponseEntity<NegocioResponseDTO> actualizarNegocio(
             @PathVariable Long id,
@@ -64,7 +66,7 @@ public class NegocioController {
         NegocioResponseDTO negocio = negocioService.actualizarNegocio(id, dto);
         return ResponseEntity.ok(negocio);
     }
-
+    @SecurityRequirement(name = "bearer-key")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarNegocio(@PathVariable Long id) {
         negocioService.eliminarNegocio(id);

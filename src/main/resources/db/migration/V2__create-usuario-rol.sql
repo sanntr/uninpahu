@@ -1,0 +1,1 @@
+insert into rol (nombre) values ('usuario');

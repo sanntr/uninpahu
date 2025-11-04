@@ -2,6 +2,7 @@ package com.uninpahu.uninpahu.controller.producto;
 
 import com.uninpahu.uninpahu.application.producto.dto.*;
 import com.uninpahu.uninpahu.application.producto.service.ProductoService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,13 +13,14 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/productos")
+@RequestMapping("/productos")
 @CrossOrigin(origins = "*")
 public class ProductoController {
 
     @Autowired
     private ProductoService productoService;
 
+    @SecurityRequirement(name = "bearer-key")
     @PostMapping
     public ResponseEntity<ProductoResponseDTO> crearProducto(@Valid @RequestBody CrearProductoDTO dto) {
         ProductoResponseDTO producto = productoService.crearProducto(dto);
@@ -80,7 +82,7 @@ public class ProductoController {
         List<ProductoListaDTO> productos = productoService.buscarPorCategoria(categoriaId);
         return ResponseEntity.ok(productos);
     }
-
+    @SecurityRequirement(name = "bearer-key")
     @PutMapping("/{id}")
     public ResponseEntity<ProductoResponseDTO> actualizarProducto(
             @PathVariable Long id,
@@ -88,7 +90,7 @@ public class ProductoController {
         ProductoResponseDTO producto = productoService.actualizarProducto(id, dto);
         return ResponseEntity.ok(producto);
     }
-
+    @SecurityRequirement(name = "bearer-key")
     @PatchMapping("/{id}/stock")
     public ResponseEntity<ProductoResponseDTO> actualizarStock(
             @PathVariable Long id,
@@ -96,19 +98,19 @@ public class ProductoController {
         ProductoResponseDTO producto = productoService.actualizarStock(id, dto);
         return ResponseEntity.ok(producto);
     }
-
+    @SecurityRequirement(name = "bearer-key")
     @PatchMapping("/{id}/activar")
     public ResponseEntity<Void> activarProducto(@PathVariable Long id) {
         productoService.activarProducto(id);
         return ResponseEntity.ok().build();
     }
-
+    @SecurityRequirement(name = "bearer-key")
     @PatchMapping("/{id}/desactivar")
     public ResponseEntity<Void> desactivarProducto(@PathVariable Long id) {
         productoService.desactivarProducto(id);
         return ResponseEntity.ok().build();
     }
-
+    @SecurityRequirement(name = "bearer-key")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarProducto(@PathVariable Long id) {
         productoService.eliminarProducto(id);

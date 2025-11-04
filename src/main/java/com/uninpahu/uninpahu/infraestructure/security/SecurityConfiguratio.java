@@ -33,8 +33,25 @@ public class SecurityConfiguratio {
         return http.csrf(csrf->csrf.disable())
                 .sessionManagement(sm-> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(req->{
-                    req.requestMatchers("/usuario/login").permitAll();//se debe registrar la url en este espacio
+                    req.requestMatchers("/usuario/**").permitAll();//se debe registrar la url en este espacio
                     req.requestMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll();
+                    // Endpoints públicos (sin autenticación)
+                    req.requestMatchers(HttpMethod.GET, "/negocios/**", "/productos/**").permitAll();
+                    // Endpoints de negocios (requieren autenticación)
+                    req.requestMatchers(HttpMethod.POST, "/negocios").authenticated();
+                    req.requestMatchers(HttpMethod.PUT, "/negocios/**").authenticated();
+                    req.requestMatchers(HttpMethod.DELETE, "/negocios/**").authenticated();
+
+                            // Endpoints de productos (requieren autenticación)
+                    req.requestMatchers(HttpMethod.POST, "/productos").authenticated();
+                    req.requestMatchers(HttpMethod.PUT, "/productos/**").authenticated();
+                    req.requestMatchers(HttpMethod.PATCH, "/productos/**").authenticated();
+                    req.requestMatchers(HttpMethod.DELETE, "/productos/**").authenticated();
+                    req.requestMatchers(HttpMethod.GET, "/categorias/**").permitAll();
+                    // Endpoints de categorías (solo admin)
+                    req.requestMatchers(HttpMethod.POST, "/categorias").authenticated();
+                    req.requestMatchers(HttpMethod.PUT, "/categorias/**").authenticated();
+                    req.requestMatchers(HttpMethod.DELETE, "/categorias/**").authenticated();
 //                    req.requestMatchers("/usuario/**").hasRole("usuario");//de esta forma se debe registrar las urls segun el rol
                     req.anyRequest().authenticated();
                 })

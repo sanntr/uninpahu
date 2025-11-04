@@ -7,7 +7,11 @@ import com.uninpahu.uninpahu.application.negocio.dto.NegocioResponseDTO;
 import com.uninpahu.uninpahu.domain.negocio.model.Negocio;
 import com.uninpahu.uninpahu.domain.negocio.repository.NegocioRepository;
 import com.uninpahu.uninpahu.domain.producto.repository.ProductoRepository;
+import com.uninpahu.uninpahu.domain.usuario.model.Usuario;
+import com.uninpahu.uninpahu.infraestructure.exception.ValidacionException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,15 +29,21 @@ public class NegocioService {
 
     @Transactional
     public NegocioResponseDTO crearNegocio(CrearNegocioDTO dto) {
-        // Verificar si ya existe un negocio con ese nombre
+        // Verificar que el usuario autenticado es el dueño
+        Usuario usuarioActual = obtenerUsuarioAutenticado();
+
+        if (!usuarioActual.getId().equals( usuarioActual.getId())) {
+            throw new ValidacionException("No puedes crear negocios para otros usuarios");
+        }
+
         if (negocioRepository.existsByNombre(dto.nombre())) {
-            throw new RuntimeException("Ya existe un negocio con ese nombre");
+            throw new ValidacionException("Ya existe un negocio con ese nombre");
         }
 
         Negocio negocio = new Negocio(
                 dto.nombre(),
-                dto.idUsuario(),
-                null, // calificación inicial es null
+                usuarioActual.getId(),
+                null,
                 dto.descripcion()
         );
 
@@ -44,7 +54,7 @@ public class NegocioService {
     @Transactional(readOnly = true)
     public NegocioResponseDTO obtenerNegocioPorId(Long id) {
         Negocio negocio = negocioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Negocio no encontrado"));
+                .orElseThrow(() -> new ValidacionException("Negocio no encontrado con ID: " + id));
         return mapearAResponseDTO(negocio);
     }
 
@@ -80,7 +90,14 @@ public class NegocioService {
     @Transactional
     public NegocioResponseDTO actualizarNegocio(Long id, ActualizarNegocioDTO dto) {
         Negocio negocio = negocioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Negocio no encontrado"));
+                .orElseThrow(() -> new ValidacionException("Negocio no encontrado con ID: " + id));
+
+        // Verificar que el usuario autenticado es el dueño
+        Usuario usuarioActual = obtenerUsuarioAutenticado();
+
+        if (!negocio.getIdUsuario().equals(usuarioActual.getId()) && !esAdmin(usuarioActual)) {
+            throw new ValidacionException("No tienes permiso para actualizar este negocio. Solo el propietario o un administrador pueden hacerlo");
+        }
 
         negocio.actualizarDatos(dto.nombre(), dto.descripcion());
         negocio = negocioRepository.save(negocio);
@@ -90,10 +107,31 @@ public class NegocioService {
 
     @Transactional
     public void eliminarNegocio(Long id) {
-        if (!negocioRepository.existsById(id)) {
-            throw new RuntimeException("Negocio no encontrado");
+        Negocio negocio = negocioRepository.findById(id)
+                .orElseThrow(() -> new ValidacionException("Negocio no encontrado con ID: " + id));
+
+        // Verificar que el usuario autenticado es el dueño
+        Usuario usuarioActual = obtenerUsuarioAutenticado();
+
+        if (!negocio.getIdUsuario().equals(usuarioActual.getId()) && !esAdmin(usuarioActual)) {
+            throw new ValidacionException("No tienes permiso para eliminar este negocio. Solo el propietario o un administrador pueden hacerlo");
         }
+
         negocioRepository.deleteById(id);
+    }
+
+    // Métodos auxiliares de seguridad
+    private Usuario obtenerUsuarioAutenticado() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() ||
+                authentication.getPrincipal().equals("anonymousUser")) {
+            throw new ValidacionException("Debes iniciar sesión para realizar esta acción");
+        }
+        return (Usuario) authentication.getPrincipal();
+    }
+
+    private boolean esAdmin(Usuario usuario) {
+        return usuario.tieneRol("ADMIN");
     }
 
     // Métodos auxiliares de mapeo
