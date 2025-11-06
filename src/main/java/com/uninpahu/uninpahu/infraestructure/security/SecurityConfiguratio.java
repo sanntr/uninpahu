@@ -47,7 +47,11 @@ public class SecurityConfiguratio {
                     req.requestMatchers(HttpMethod.PUT, "/productos/**").authenticated();
                     req.requestMatchers(HttpMethod.PATCH, "/productos/**").authenticated();
                     req.requestMatchers(HttpMethod.DELETE, "/productos/**").authenticated();
+                    req.requestMatchers(HttpMethod.POST, "/cart").authenticated();
+                    req.requestMatchers(HttpMethod.GET, "/cart/**").authenticated();
+                    req.requestMatchers(HttpMethod.PATCH, "/cart/**").authenticated();
                     req.requestMatchers(HttpMethod.GET, "/categorias/**").permitAll();
+
                     // Endpoints de categorías (solo admin)
                     req.requestMatchers(HttpMethod.POST, "/categorias").authenticated();
                     req.requestMatchers(HttpMethod.PUT, "/categorias/**").authenticated();
