@@ -38,7 +38,7 @@ public class SecurityConfiguratio {
                     // Endpoints públicos (sin autenticación)
                     req.requestMatchers(HttpMethod.GET, "/negocios/**", "/productos/**").permitAll();
                     // Endpoints de negocios (requieren autenticación)
-                    req.requestMatchers(HttpMethod.POST, "/negocios").authenticated();
+                    req.requestMatchers(HttpMethod.POST, "/negocios/**").authenticated();
                     req.requestMatchers(HttpMethod.PUT, "/negocios/**").authenticated();
                     req.requestMatchers(HttpMethod.DELETE, "/negocios/**").authenticated();
 

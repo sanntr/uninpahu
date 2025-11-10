@@ -1,5 +1,14 @@
 package com.uninpahu.uninpahu.application.negocio.service;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.uninpahu.uninpahu.application.negocio.dto.ActualizarNegocioDTO;
 import com.uninpahu.uninpahu.application.negocio.dto.CrearNegocioDTO;
 import com.uninpahu.uninpahu.application.negocio.dto.NegocioListaDTO;
@@ -9,15 +18,6 @@ import com.uninpahu.uninpahu.domain.negocio.repository.NegocioRepository;
 import com.uninpahu.uninpahu.domain.producto.repository.ProductoRepository;
 import com.uninpahu.uninpahu.domain.usuario.model.Usuario;
 import com.uninpahu.uninpahu.infraestructure.exception.ValidacionException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class NegocioService {
@@ -43,10 +43,19 @@ public class NegocioService {
         if (negocioRepository.existsByNombre(dto.nombre())) {
             throw new ValidacionException("Ya existe un negocio con ese nombre");
         }
-
-        Negocio negocio = null;
         try {
-            negocio = new Negocio(
+            // Defensive handling: only get bytes when a file was actually uploaded
+            byte[] imagenBytes = null;
+            if (dto.imagen() != null) {
+                System.out.println("Imagen multipart: name=" + dto.imagen().getName() + ", contentType=" + dto.imagen().getContentType() + ", size=" + dto.imagen().getSize());
+                if (!dto.imagen().isEmpty()) {
+                    imagenBytes = dto.imagen().getBytes();
+                }
+            } else {
+                System.out.println("No se envio archivo 'imagen' en el form-data");
+            }
+
+            Negocio negocio = new Negocio(
                     dto.nombre(),
                     usuarioActual.getId(),
                     null,
@@ -56,14 +65,16 @@ public class NegocioService {
                     dto.direccion(),
                     dto.paginaWeb(),
                     dto.ciudad(),
-                    dto.imagen().getBytes()
+                    imagenBytes
             );
+            if (negocio.getImagen() != null) {
+                System.out.println("Imagen guardada, length=" + negocio.getImagen().length);
+            }
+            negocio = negocioRepository.save(negocio);
+            return mapearAResponseDTO(negocio);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
-        negocio = negocioRepository.save(negocio);
-        return mapearAResponseDTO(negocio);
     }
 
     @Transactional(readOnly = true)
@@ -116,6 +127,14 @@ public class NegocioService {
 
         // Actualizar campos básicos y extendidos si vienen en el DTO
         try {
+            byte[] imagenBytes = null;
+            if (dto.imagen() != null) {
+                System.out.println("Actualizar - imagen multipart: name=" + dto.imagen().getName() + ", contentType=" + dto.imagen().getContentType() + ", size=" + dto.imagen().getSize());
+                if (!dto.imagen().isEmpty()) {
+                    imagenBytes = dto.imagen().getBytes();
+                }
+            }
+
             negocio.actualizarDatosExtendido(
                     dto.nombre(),
                     dto.descripcion(),
@@ -124,7 +143,7 @@ public class NegocioService {
                     dto.direccion(),
                     dto.paginaWeb(),
                     dto.ciudad(),
-                    dto.imagen().getBytes()
+                    imagenBytes
             );
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -148,6 +167,17 @@ public class NegocioService {
         }
 
         negocioRepository.deleteById(id);
+    }
+
+    public byte[] obtenerImagen(Long id) {
+        Negocio negocio = negocioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Negocio no encontrado"));
+
+        if (negocio.getImagen() == null) {
+            throw new RuntimeException("El negocio no tiene imagen asociada");
+        }
+
+        return negocio.getImagen();
     }
 
     // Métodos auxiliares de seguridad

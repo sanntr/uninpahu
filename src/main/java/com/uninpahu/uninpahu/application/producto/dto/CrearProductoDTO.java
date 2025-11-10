@@ -1,6 +1,7 @@
 package com.uninpahu.uninpahu.application.producto.dto;
 
 import jakarta.validation.constraints.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -28,6 +29,6 @@ public record CrearProductoDTO(
         @NotNull(message = "El stock es obligatorio")
         @Min(value = 0, message = "El stock no puede ser negativo")
         Integer stock,
-
-        List<Long> categoriasIds
+        List<Long> categoriasIds,
+        List<MultipartFile> imagenes
 ) {}

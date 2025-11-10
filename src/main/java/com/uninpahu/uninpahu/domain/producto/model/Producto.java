@@ -1,18 +1,36 @@
 package com.uninpahu.uninpahu.domain.producto.model;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.uninpahu.uninpahu.domain.categoria.model.Categoria;
 import com.uninpahu.uninpahu.domain.negocio.model.Negocio;
-import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
 
 @Table(name = "producto")
 @Entity(name = "producto")
@@ -76,6 +94,10 @@ public class Producto {
     )
     private List<Categoria> categorias = new ArrayList<>();
 
+    // Imágenes del producto (uno a muchos)
+    @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<ProductImage> imagenes = new ArrayList<>();
+
     // Constructor personalizado
     public Producto(String nombre, String descripcion, Long idNegocio, BigDecimal descuento,
                     BigDecimal precio, Integer stock, BigDecimal calificacion, Boolean activo) {
@@ -132,6 +154,17 @@ public class Producto {
             return precio.subtract(montoDescuento);
         }
         return precio;
+    }
+
+    // Helpers para manejar imágenes
+    public void addImagen(ProductImage imagen) {
+        if (imagen == null) return;
+        imagen.setProducto(this);
+        this.imagenes.add(imagen);
+    }
+
+    public void clearImagenes() {
+        this.imagenes.clear();
     }
 
     public boolean hayStock() {

@@ -16,5 +16,6 @@ public record ProductoResponseDTO(
         Integer stock,
         BigDecimal calificacion,
         Boolean activo,
-        List<String> categorias
+        List<String> categorias,
+        List<byte[]> imagenes
 ) {}

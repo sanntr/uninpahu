@@ -10,6 +10,8 @@ import com.uninpahu.uninpahu.domain.categoria.repository.CategoriaRepository;
 import com.uninpahu.uninpahu.domain.negocio.model.Negocio;
 import com.uninpahu.uninpahu.domain.negocio.repository.NegocioRepository;
 import com.uninpahu.uninpahu.domain.producto.model.Producto;
+import com.uninpahu.uninpahu.domain.producto.model.ProductImage;
+import org.springframework.web.multipart.MultipartFile;
 import com.uninpahu.uninpahu.domain.producto.repository.ProductoRepository;
 import com.uninpahu.uninpahu.domain.usuario.model.Usuario;
 import com.uninpahu.uninpahu.infraestructure.exception.ValidacionException;
@@ -60,6 +62,20 @@ public class ProductoService {
                 true
         );
 
+        // Si vienen imágenes, agregarlas al producto (persistidas en cascada)
+        if (dto.imagenes() != null && !dto.imagenes().isEmpty()) {
+            for (MultipartFile mf : dto.imagenes()) {
+                try {
+                    if (mf != null && !mf.isEmpty()) {
+                        ProductImage img = new ProductImage(mf.getBytes());
+                        producto.addImagen(img);
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException("Error leyendo imagen: " + e.getMessage(), e);
+                }
+            }
+        }
+
         producto = productoRepository.save(producto);
 
         // Asignar categorías si se proporcionaron
@@ -69,7 +85,7 @@ public class ProductoService {
             producto = productoRepository.save(producto);
         }
 
-        return mapearAResponseDTO(producto);
+    return mapearAResponseDTO(producto);
     }
 
     @Transactional(readOnly = true)
@@ -244,6 +260,10 @@ public class ProductoService {
                 .map(Categoria::getTipo)
                 .collect(Collectors.toList());
 
+    List<byte[]> imagenes = producto.getImagenes().stream()
+        .map(pi -> pi.getImagen())
+        .collect(Collectors.toList());
+
         return new ProductoResponseDTO(
                 producto.getId(),
                 producto.getNombre(),
@@ -256,7 +276,8 @@ public class ProductoService {
                 producto.getStock(),
                 producto.getCalificacion(),
                 producto.getActivo(),
-                categorias
+        categorias,
+        imagenes
         );
     }
 

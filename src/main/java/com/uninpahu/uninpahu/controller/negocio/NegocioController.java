@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,7 +31,7 @@ public class NegocioController {
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<NegocioResponseDTO> crearNegocio(
             @Valid @ModelAttribute CrearNegocioDTO dto) {
-
+        System.out.println("Tipo imagen: " + dto.imagen().getClass());
         NegocioResponseDTO negocio = negocioService.crearNegocio(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(negocio);
     }
@@ -80,8 +81,26 @@ public class NegocioController {
         return ResponseEntity.noContent().build();
     }
 
+
+    @GetMapping("/{id}/imagen")
+    public ResponseEntity<byte[]> obtenerImagen(@PathVariable Long id) {
+        try {
+            byte[] imagen = negocioService.obtenerImagen(id);
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_PNG) // o MediaType.IMAGE_JPEG
+                    .body(imagen);
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<String> manejarExcepciones(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
+
+
 }
