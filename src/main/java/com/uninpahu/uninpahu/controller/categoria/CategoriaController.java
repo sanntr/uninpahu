@@ -20,8 +20,12 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 public class CategoriaController {
 
-    @Autowired
-    private CategoriaService categoriaService;
+
+    final CategoriaService categoriaService;
+
+    public CategoriaController(CategoriaService categoriaService) {
+        this.categoriaService = categoriaService;
+    }
 
     /**
      * Crear una nueva categoría (Solo ADMIN)

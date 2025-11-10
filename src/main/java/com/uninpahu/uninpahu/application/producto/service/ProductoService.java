@@ -26,14 +26,15 @@ import java.util.stream.Collectors;
 @Service
 public class ProductoService {
 
-    @Autowired
-    private ProductoRepository productoRepository;
+    final ProductoRepository productoRepository;
+    final NegocioRepository negocioRepository;
+    final CategoriaRepository categoriaRepository;
 
-    @Autowired
-    private NegocioRepository negocioRepository;
-
-    @Autowired
-    private CategoriaRepository categoriaRepository;
+    public ProductoService(ProductoRepository productoRepository, NegocioRepository negocioRepository, CategoriaRepository categoriaRepository) {
+        this.productoRepository = productoRepository;
+        this.negocioRepository = negocioRepository;
+        this.categoriaRepository = categoriaRepository;
+    }
 
     @Transactional
     public ProductoResponseDTO crearProducto(CrearProductoDTO dto) {

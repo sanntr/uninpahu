@@ -17,8 +17,12 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 public class ProductoController {
 
-    @Autowired
-    private ProductoService productoService;
+
+    final ProductoService productoService;
+
+    public ProductoController(ProductoService productoService) {
+        this.productoService = productoService;
+    }
 
     @SecurityRequirement(name = "bearer-key")
     @PostMapping

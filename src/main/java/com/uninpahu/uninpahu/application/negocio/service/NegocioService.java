@@ -15,17 +15,21 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class NegocioService {
 
-    @Autowired
-    private NegocioRepository negocioRepository;
 
-    @Autowired
-    private ProductoRepository productoRepository;
+    final NegocioRepository negocioRepository;
+    final ProductoRepository productoRepository;
+
+    public NegocioService(NegocioRepository negocioRepository, ProductoRepository productoRepository) {
+        this.negocioRepository = negocioRepository;
+        this.productoRepository = productoRepository;
+    }
 
     @Transactional
     public NegocioResponseDTO crearNegocio(CrearNegocioDTO dto) {
@@ -40,12 +44,23 @@ public class NegocioService {
             throw new ValidacionException("Ya existe un negocio con ese nombre");
         }
 
-        Negocio negocio = new Negocio(
-                dto.nombre(),
-                usuarioActual.getId(),
-                null,
-                dto.descripcion()
-        );
+        Negocio negocio = null;
+        try {
+            negocio = new Negocio(
+                    dto.nombre(),
+                    usuarioActual.getId(),
+                    null,
+                    dto.descripcion(),
+                    dto.fechaInicio(),
+                    dto.registradoCamara(),
+                    dto.direccion(),
+                    dto.paginaWeb(),
+                    dto.ciudad(),
+                    dto.imagen().getBytes()
+            );
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         negocio = negocioRepository.save(negocio);
         return mapearAResponseDTO(negocio);
@@ -99,7 +114,22 @@ public class NegocioService {
             throw new ValidacionException("No tienes permiso para actualizar este negocio. Solo el propietario o un administrador pueden hacerlo");
         }
 
-        negocio.actualizarDatos(dto.nombre(), dto.descripcion());
+        // Actualizar campos básicos y extendidos si vienen en el DTO
+        try {
+            negocio.actualizarDatosExtendido(
+                    dto.nombre(),
+                    dto.descripcion(),
+                    dto.fechaInicio(),
+                    dto.registradoCamara(),
+                    dto.direccion(),
+                    dto.paginaWeb(),
+                    dto.ciudad(),
+                    dto.imagen().getBytes()
+            );
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
         negocio = negocioRepository.save(negocio);
 
         return mapearAResponseDTO(negocio);
@@ -144,6 +174,12 @@ public class NegocioService {
                 negocio.getIdUsuario(),
                 negocio.getCalificacion(),
                 negocio.getDescripcion(),
+                negocio.getFechaInicio(),
+                negocio.getRegistradoCamara(),
+                negocio.getDireccion(),
+                negocio.getPaginaWeb(),
+                negocio.getCiudad(),
+                negocio.getImagen(),
                 cantidadProductos
         );
     }

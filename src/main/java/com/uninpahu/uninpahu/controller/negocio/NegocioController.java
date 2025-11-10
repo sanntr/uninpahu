@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -19,12 +20,17 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 public class NegocioController {
 
-    @Autowired
-    private NegocioService negocioService;
+    final NegocioService negocioService;
+
+    public NegocioController(NegocioService negocioService) {
+        this.negocioService = negocioService;
+    }
 
     @SecurityRequirement(name = "bearer-key")
-    @PostMapping
-    public ResponseEntity<NegocioResponseDTO> crearNegocio(@Valid @RequestBody CrearNegocioDTO dto) {
+    @PostMapping(consumes = "multipart/form-data")
+    public ResponseEntity<NegocioResponseDTO> crearNegocio(
+            @Valid @ModelAttribute CrearNegocioDTO dto) {
+
         NegocioResponseDTO negocio = negocioService.crearNegocio(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(negocio);
     }
@@ -59,10 +65,11 @@ public class NegocioController {
         return ResponseEntity.ok(negocios);
     }
     @SecurityRequirement(name = "bearer-key")
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", consumes = "multipart/form-data")
     public ResponseEntity<NegocioResponseDTO> actualizarNegocio(
             @PathVariable Long id,
-            @Valid @RequestBody ActualizarNegocioDTO dto) {
+            @Valid @ModelAttribute ActualizarNegocioDTO dto) {
+
         NegocioResponseDTO negocio = negocioService.actualizarNegocio(id, dto);
         return ResponseEntity.ok(negocio);
     }

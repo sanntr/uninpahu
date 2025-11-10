@@ -43,6 +43,25 @@ public class Negocio {
     @Column(name = "descripcion", columnDefinition = "TEXT")
     private String descripcion;
 
+    @Column(name = "fecha_inicio")
+    private String fechaInicio;
+
+    @Column(name = "registrado_camara")
+    private Boolean registradoCamara = Boolean.FALSE;
+
+    @Column(name = "direccion", length = 255)
+    private String direccion;
+
+    @Column(name = "pagina_web", length = 255)
+    private String paginaWeb;
+
+    @Column(name = "ciudad", length = 100)
+    private String ciudad;
+
+    @Lob
+    @Column(name = "imagen")
+    private byte[] imagen;
+
     // Relación con Usuario
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_usuario", insertable = false, updatable = false)
@@ -53,11 +72,19 @@ public class Negocio {
     private List<Producto> productos = new ArrayList<>();
 
     // Constructor personalizado (sin id y sin relaciones)
-    public Negocio(String nombre, Long idUsuario, BigDecimal calificacion, String descripcion) {
+    public Negocio(String nombre, Long idUsuario, BigDecimal calificacion, String descripcion,
+                   String fechaInicio, Boolean registradoCamara, String direccion,
+                   String paginaWeb, String ciudad, byte[] imagen) {
         this.nombre = nombre;
         this.idUsuario = idUsuario;
         this.calificacion = calificacion;
         this.descripcion = descripcion;
+        this.fechaInicio = fechaInicio;
+        this.registradoCamara = registradoCamara == null ? Boolean.FALSE : registradoCamara;
+        this.direccion = direccion;
+        this.paginaWeb = paginaWeb;
+        this.ciudad = ciudad;
+        this.imagen = imagen;
     }
 
     // Métodos de utilidad
@@ -68,6 +95,26 @@ public class Negocio {
         if (descripcion != null) {
             this.descripcion = descripcion;
         }
+    }
+
+    public void actualizarDatosExtendido(String nombre, String descripcion, String fechaInicio,
+                                          Boolean registradoCamara, String direccion, String paginaWeb,
+                                          String ciudad, byte[] imagen) {
+        actualizarDatos(nombre, descripcion);
+        if (fechaInicio != null) this.fechaInicio = fechaInicio;
+        if (registradoCamara != null) this.registradoCamara = registradoCamara;
+        if (direccion != null) this.direccion = direccion;
+        if (paginaWeb != null) this.paginaWeb = paginaWeb;
+        if (ciudad != null) this.ciudad = ciudad;
+        if (imagen != null) this.imagen = imageCopy(imagen);
+    }
+
+    // Defensive copy for mutable byte[]
+    private static byte[] imageCopy(byte[] src) {
+        if (src == null) return null;
+        byte[] dst = new byte[src.length];
+        System.arraycopy(src, 0, dst, 0, src.length);
+        return dst;
     }
 
     public void actualizarCalificacion(BigDecimal calificacion) {
@@ -82,6 +129,12 @@ public class Negocio {
                 ", idUsuario=" + idUsuario +
                 ", calificacion=" + calificacion +
                 ", descripcion='" + descripcion + '\'' +
+                ", fechaInicio='" + fechaInicio + '\'' +
+                ", registradoCamara='" + registradoCamara + '\'' +
+                ", direccion='" + direccion + '\'' +
+                ", paginaWeb='" + paginaWeb + '\'' +
+                ", ciudad='" + ciudad + '\'' +
+                ", imagenLength=" + (imagen != null ? imagen.length : 0) +
                 '}';
     }
 }

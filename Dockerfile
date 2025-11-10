@@ -4,8 +4,8 @@ WORKDIR /app
 COPY . .
 RUN mvn clean package -DskipTests
 
-# Etapa 2: runtime con JDK 24
-FROM eclipse-temurin:24-jdk
+# Etapa 2: runtime con JDK 21
+FROM eclipse-temurin:21-jdk
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 ENV PORT=8080
