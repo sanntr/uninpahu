@@ -18,9 +18,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfiguratio {
 
     final SecurityFilter securityFilter;
+    final  CorsConfig corsConfig;
 
-    public SecurityConfiguratio(SecurityFilter securityFilter) {
+    public SecurityConfiguratio(SecurityFilter securityFilter, CorsConfig corsConfig) {
         this.securityFilter = securityFilter;
+        this.corsConfig = corsConfig;
     }
 
     @Bean
@@ -31,6 +33,7 @@ public class SecurityConfiguratio {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
         return http.csrf(csrf->csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfig.corsConfigurationSource()))
                 .sessionManagement(sm-> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(req->{
                     req.requestMatchers("/usuario/**").permitAll();//se debe registrar la url en este espacio
