@@ -393,33 +393,58 @@ Endpoints:
 # 6. Ejecución del proyecto
 
 # 1. Clonar el repositorio
+
+```bash
 git clone https://github.com/sanntr/uninpahu.git
 cd uninpahu
-
+```
 # 2. Construir el proyecto
+```bash
 mvn clean install
-
+```
 # 3. Ejecutar con Spring Boot
+```bash
 mvn spring-boot:run
-
+```
 
 O con Docker:
-
+```bash
 docker build -t unin-backend .
 docker run -p 8080:8080 unin-backend
-
+```
 ---
 
 ## 📦 7. Estructura completa del proyecto
 
-src/
- ├── main/
- │   ├── java/com/uninpahu/uninpahu
- │   │     ├── application/
- │   │     ├── domain/
- │   │     ├── controllers/
- │   │     ├── infrastructure/
- │   │     └── UninpahuApplication.java
- │   └── resources/
- └── test/
+```plaintext
+uninpahu/
+├── src/
+│   ├── main/
+│   │   ├── java/com/uninpahu/uninpahu/
+│   │   │   ├── application/
+│   │   │   │   ├── cart/
+│   │   │   │   ├── categoria/
+│   │   │   │   ├── form/
+│   │   │   │   ├── negocio/
+│   │   │   │   ├── producto/
+│   │   │   │   └── usuario/
+│   │   │   ├── controllers/
+│   │   │   ├── domain/
+│   │   │   │   ├── cart/
+│   │   │   │   ├── categoria/
+│   │   │   │   ├── form/
+│   │   │   │   ├── negocio/
+│   │   │   │   ├── producto/
+│   │   │   │   └── usuario/
+│   │   │   ├── infrastructure/
+│   │   │   │   ├── exception/
+│   │   │   │   └── security/
+│   │   │   └── UninpahuApplication.java
+│   │   └── resources/
+│   │       ├── application.properties
+│   │       └── db/migration/
+│   └── test/
+└── pom.xml
+```
+---
 
