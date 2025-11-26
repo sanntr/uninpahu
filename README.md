@@ -9,9 +9,9 @@ El sistema gestiona usuarios, productos, categorías y carritos de compras, resp
 
 - [Descripción general](#descripción-general)
 - [Arquitectura del proyecto](#arquitectura-del-proyecto)
-- [Diagramas Mermaid](#diagramas-mermaid)
-  - [Diagrama de capas](#diagrama-de-capas)
+- [Diagramas](#diagramas)
   - [Diagrama de clases completo](#diagrama-de-clases-completo)
+  - [Diagrama de capas](#diagrama-de-capas) 
 - [Explicación por paquetes y clases](#explicación-por-paquetes-y-clases)
   - [Application](#1-application)
   - [Domain](#2-domain)
@@ -23,7 +23,7 @@ El sistema gestiona usuarios, productos, categorías y carritos de compras, resp
 
 ---
 
-# 🧾 Descripción general
+# 🧾 1. Descripción general
 
 Este backend implementa:
 
@@ -36,7 +36,7 @@ Este backend implementa:
 
 ---
 
-# 🧱 Arquitectura del proyecto
+# 🧱 2. Arquitectura del proyecto
 
 La arquitectura sigue el enfoque de **Clean Architecture**, estructurada en tres grandes capas:
 
@@ -48,7 +48,7 @@ La arquitectura sigue el enfoque de **Clean Architecture**, estructurada en tres
 
 ---
 
-# 🖼️ Diagramas de clsaes
+# 🖼️ 3. Diagramas de clsaes
 
 ```mermaid
 classDiagram
@@ -206,3 +206,220 @@ flowchart LR
 ```
 
 ---
+
+# 🔍 4. Explicación por paquetes y clases
+
+---
+
+## 📦 1. Application
+
+Contiene la lógica de negocio, DTOs, mappers y servicios.
+
+### 🧱 DTOs
+
+#### **`CartRequestDTO`**
+Representa la petición del cliente al agregar productos al carrito.
+
+#### **`CartResponseDTO`**
+Respuesta completa del carrito, incluyendo productos y cantidades.
+
+#### **`ProductoDTO`**
+Versión ligera del modelo "Producto" para evitar exponer la entidad completa.
+
+---
+
+### 🔄 Mappers
+
+#### **`CartMapper`**
+Se encarga de convertir:
+
+- `Carrito` → `CartResponseDTO`  
+- `Producto` → `ProductoDTO`  
+
+---
+
+### ⚙️ Services
+
+#### **`CartService`**
+
+Incluye métodos principales:
+
+- `agregarProducto()`  
+- `quitarProducto()`  
+- `obtenerCarrito()`  
+
+Depende de repositorios y del mapper.
+
+---
+
+## 📦 2. Domain
+
+Capa donde residen las **entidades** y **repositorios** del modelo de negocio.
+
+---
+
+### 🧩 Entidades
+
+#### **Usuario**
+Atributos:
+
+- `id`
+- `nombre`
+- `email`
+- `password`
+- `rol`
+
+#### **Rol**
+Contiene el rol del usuario (por ejemplo: `ADMIN`, `USER`).
+
+#### **Producto**
+Atributos:
+
+- `id`
+- `nombre`
+- `precio`
+- `categoría`
+
+#### **Categoria**
+Representa la categoría de un producto.
+
+#### **Carrito**
+Modela la relación:
+
+Usuario — contiene → Productos
+
+
+---
+
+### 🗂️ Repositorios
+
+#### **`RepositoryUsuario`**
+Método adicional:
+- `findByEmail()`
+
+#### **`RepositoryProducto`**
+Método adicional:
+- `findByCategoria()`
+
+---
+
+## 📦 3. Infrastructure
+
+Incluye la capa de **seguridad**, **filtros**, **configuración** y **excepciones**.
+
+---
+
+### 🔐 Seguridad
+
+#### **`SecurityConfiguration`**
+Configura:
+
+- Autorización  
+- Filtros  
+- Endpoints públicos  
+
+#### **`SecurityFilter`**
+Intercepta y procesa peticiones:
+
+- Extrae token  
+- Valida JWT  
+- Configura el contexto de seguridad  
+
+#### **`TokenService`**
+Responsable de:
+
+- `generateToken()`
+- `validateToken()`
+- Manejo general del token JWT
+
+---
+
+### ⚠️ Excepciones
+
+#### **`ValidacionException`**
+Se utiliza para errores personalizados.
+
+#### **`ErrorManager`**
+Maneja globalmente todas las excepciones de la aplicación.
+
+---
+
+## 📦 4. Controllers
+
+Controladores expuestos como API REST.
+
+---
+
+### 🛒 **CartController**
+
+Endpoints:
+
+- `POST /cart`
+- `GET /cart`
+
+---
+
+### 📦 **ProductoController**
+
+Endpoints:
+
+- `GET /productos`
+- `POST /productos`
+
+---
+
+### 👤 **UsuarioController**
+
+Endpoints:
+
+- `POST /login`
+- `POST /register`
+
+---
+
+# 🛠️ 5. Tecnologías utilizadas
+
+- **Java 17**
+- **Spring Boot**
+- **Maven**
+- **PostgreSQL**
+- **JWT (Json Web Token)**
+- **Lombok**
+- **JPA & Hibernate**
+- **Docker**
+
+---
+
+# 6. Ejecución del proyecto
+
+# 1. Clonar el repositorio
+git clone https://github.com/sanntr/uninpahu.git
+cd uninpahu
+
+# 2. Construir el proyecto
+mvn clean install
+
+# 3. Ejecutar con Spring Boot
+mvn spring-boot:run
+
+
+O con Docker:
+
+docker build -t unin-backend .
+docker run -p 8080:8080 unin-backend
+
+---
+
+## 📦 7. Estructura completa del proyecto
+
+src/
+ ├── main/
+ │   ├── java/com/uninpahu/uninpahu
+ │   │     ├── application/
+ │   │     ├── domain/
+ │   │     ├── controllers/
+ │   │     ├── infrastructure/
+ │   │     └── UninpahuApplication.java
+ │   └── resources/
+ └── test/
+
