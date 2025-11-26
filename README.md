@@ -48,7 +48,7 @@ La arquitectura sigue el enfoque de **Clean Architecture**, estructurada en tres
 
 ---
 
-# 🖼️ 3. Diagramas de clsaes
+# 🖼️ 3. Diagramas de clases
 
 ```mermaid
 classDiagram
